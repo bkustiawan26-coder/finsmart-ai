@@ -1,0 +1,28 @@
+# FinSmart AI - Android Project Structure (MVVM)
+
+app/
+├── src/
+│   ├── main/
+│   │   ├── java/com/finsmart/ai/
+│   │   │   ├── data/
+│   │   │   │   ├── model/ (Transaction, User, Budget)
+│   │   │   │   ├── repository/ (FinanceRepository, AuthRepository)
+│   │   │   │   ├── local/ (DataStoreManager)
+│   │   │   │   └── remote/ (FirestoreService)
+│   │   │   ├── ui/
+│   │   │   │   ├── theme/ (Color.kt, Type.kt, Theme.kt - Material 3)
+│   │   │   │   ├── components/ (Common UI components)
+│   │   │   │   ├── navigation/ (NavGraph.kt)
+│   │   │   │   ├── screens/
+│   │   │   │   │   ├── auth/ (LoginScreen, RegisterScreen)
+│   │   │   │   │   ├── dashboard/ (DashboardScreen)
+│   │   │   │   │   ├── transaction/ (AddTransactionScreen)
+│   │   │   │   │   ├── report/ (ReportScreen)
+│   │   │   │   │   └── ai/ (AIChatScreen)
+│   │   │   │   └── viewmodel/ (MainViewModel, AuthViewModel)
+│   │   │   └── util/ (Constants, Extensions)
+│   │   └── res/
+│   │       ├── values/ (strings.xml - ID)
+│   │       └── values-en/ (strings.xml - EN)
+├── build.gradle.kts (Project level)
+└── app/build.gradle.kts (App level)

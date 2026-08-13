@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user preferences and financial health score.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "language": { "type": "string", "enum": ["id", "en"] },
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+        "financialHealthScore": { "type": "number" }
+      },
+      "required": ["uid", "displayName", "language", "theme"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents a single income or expense transaction.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["INCOME", "EXPENSE"] }
+      },
+      "required": ["userId", "amount", "category", "date", "type"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Defines a spending limit for a specific category.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "category": { "type": "string" },
+        "limit": { "type": "number" },
+        "spent": { "type": "number" }
+      },
+      "required": ["userId", "category", "limit", "spent"]
+    },
+    "SavingGoal": {
+      "title": "Saving Goal",
+      "description": "Represents a financial goal the user is saving for.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "deadline": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "targetAmount", "currentAmount", "deadline"]
+    },
+    "Changelog": {
+      "title": "Changelog",
+      "description": "Records changes and activities performed by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["transaction", "budget", "goal", "profile", "system"] }
+      },
+      "required": ["userId", "action", "details", "timestamp", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User's financial transactions."
+    },
+    "/users/{userId}/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "User's spending budgets."
+    },
+    "/users/{userId}/savingGoals/{goalId}": {
+      "schema": "SavingGoal",
+      "description": "User's saving goals."
+    },
+    "/users/{userId}/changelogs/{logId}": {
+      "schema": "Changelog",
+      "description": "User's activity logs."
+    }
+  }
+}

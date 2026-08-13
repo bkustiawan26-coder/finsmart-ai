@@ -1,0 +1,8 @@
+{
+  "name": "FinSmart AI",
+  "description": "Aplikasi manajemen keuangan pintar berbasis AI dengan desain Material 3 (Android 2026 Style).",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
