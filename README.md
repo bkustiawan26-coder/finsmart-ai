@@ -1,33 +1,24 @@
-# FinSmart AI 🚀
+# FinSmart AI
 
-Aplikasi manajemen keuangan pintar berbasis AI dengan desain modern.
+Aplikasi manajemen keuangan pribadi dengan asisten AI (Gemini), berjalan 100% di tier gratis.
 
-## 🌟 Fitur Utama
-- **Manajemen Anggaran**: Pantau pemasukan dan pengeluaran Anda.
-- **AI Health Score**: Analisis kesehatan keuangan Anda secara otomatis.
-- **Simulasi Transaksi**: Buat data simulasi untuk perencanaan masa depan.
-- **Keamanan Firebase**: Data tersimpan aman di Google Cloud (Firestore).
+## Arsitektur (gratis)
+- **Frontend**: React + Vite (PWA), di-hosting di Cloudflare Pages (`*.pages.dev`).
+- **Login & database**: Firebase Authentication (Google) + Cloud Firestore, project tanpa billing.
+- **AI**: Firebase AI Logic → Gemini Developer API (free tier). Tidak ada API key di kode.
+- **Android**: Trusted Web Activity (folder `android/`), dibangun lewat GitHub Actions.
 
-## 🛠️ Cara Deploy ke GitHub Pages (Gratis Selamanya)
+## Pengembangan lokal
+```
+npm install
+npm run dev
+```
 
-Aplikasi ini sudah saya siapkan agar bisa berjalan di **GitHub Pages** secara gratis. Ikuti langkah berikut setelah Anda melakukan **Export to GitHub**:
+## Build
+```
+npm run build
+```
+Output di `dist/`. Cloudflare Pages: build command `npm run build`, output directory `dist`.
 
-1. **Masuk ke Repositori GitHub Anda.**
-2. Klik tab **Settings**.
-3. Pilih menu **Pages** di sebelah kiri.
-4. Pada bagian **Build and deployment > Source**, pilih **GitHub Actions**.
-5. Tunggu beberapa menit, GitHub akan otomatis membangun dan menerbitkan aplikasi Anda!
-
-## 🗄️ Tentang Database (Firestore)
-Meskipun kodenya ada di GitHub, data Anda tetap tersimpan di **Firebase**.
-- **Aman**: Data tidak akan bocor ke GitHub karena konfigurasi Firebase diatur untuk akses aplikasi.
-- **Gratis**: Firebase Firestore memiliki paket gratis (Spark) yang sangat cukup untuk penggunaan pribadi.
-
-## 🚀 Pengembangan Lokal
-1. Clone repositori ini.
-2. Jalankan `npm install`.
-3. Jalankan `npm run dev`.
-4. Buka `http://localhost:3000`.
-
----
-Dibuat dengan ❤️ menggunakan Google AI Studio.
+## Kebijakan privasi
+`/privacy.html`

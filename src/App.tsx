@@ -3,7 +3,10 @@ import { auth, db } from './firebase';
 import { 
   onAuthStateChanged, 
   signOut, 
-  User 
+  User,
+  GoogleAuthProvider,
+  reauthenticateWithPopup,
+  deleteUser
 } from 'firebase/auth';
 import { 
   doc, 
@@ -508,7 +511,7 @@ function App() {
 
         unsubLogs = firebaseService.subscribeToCollection<Changelog>(
           `users/${user.uid}/changelogs`,
-          [orderBy('timestamp', 'desc'), limit(1000)],
+          [orderBy('timestamp', 'desc'), limit(100)],
           (data) => setLogs(data)
         );
 
@@ -727,6 +730,37 @@ function App() {
       console.error("Failed to update goal amount", error);
       toast.error("Gagal memperbarui saldo tabungan");
     }
+  };
+
+  const handleDeleteAccount = () => {
+    if (!user) return;
+    setConfirmation({
+      isOpen: true,
+      title: "Hapus Akun & Semua Data?",
+      message: "Semua transaksi, anggaran, tujuan, log, dan akun Anda akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
+      variant: 'danger',
+      onConfirm: async () => {
+        const run = (async () => {
+          await reauthenticateWithPopup(user, new GoogleAuthProvider());
+          for (const sub of ['transactions', 'budgets', 'savingGoals', 'changelogs']) {
+            const snap = await getDocs(collection(db, 'users', user.uid, sub));
+            const docs = snap.docs;
+            for (let i = 0; i < docs.length; i += 400) {
+              const batch = writeBatch(db);
+              docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+              await batch.commit();
+            }
+          }
+          await deleteDoc(doc(db, 'users', user.uid));
+          await deleteUser(user);
+        })();
+        toast.promise(run, {
+          loading: 'Menghapus akun dan data...',
+          success: 'Akun dan semua data berhasil dihapus',
+          error: 'Gagal menghapus akun. Silakan coba lagi.'
+        });
+      }
+    });
   };
 
   const handleGenerateDummyData = async () => {
@@ -1506,6 +1540,13 @@ function App() {
           <Users className="w-5 h-5" /> Ganti Akun
         </button>
       </div>
+
+      <button 
+        onClick={handleDeleteAccount}
+        className="w-full py-4 rounded-2xl text-red-500 dark:text-red-400 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+      >
+        <Trash2 className="w-4 h-4" /> Hapus Akun & Semua Data
+      </button>
     </motion.div>
   );
 

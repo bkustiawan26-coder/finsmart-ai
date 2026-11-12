@@ -11,6 +11,7 @@ import Logo from './Logo';
 import LegalModal from './LegalModal';
 import { 
   signInWithPopup, 
+  signInWithRedirect,
   GoogleAuthProvider, 
 } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -32,10 +33,15 @@ const LoginScreen = ({ onLoginSuccess, theme, toggleTheme }: Props) => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
       onLoginSuccess();
     } catch (error: any) {
+      if (error?.code === 'auth/popup-blocked' || error?.code === 'auth/operation-not-supported-in-this-environment') {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       console.error("Google login failed", error);
       toast.error("Gagal masuk dengan Google: " + error.message);
     } finally {
