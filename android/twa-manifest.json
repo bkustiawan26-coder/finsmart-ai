@@ -1,5 +1,5 @@
 {
-  "packageId": "id.finsmart.ai",
+  "packageId": "fun.app_26app.twa",
   "host": "finsmart-ai.pages.dev",
   "name": "FinSmart AI",
   "launcherName": "FinSmart AI",
@@ -20,7 +20,7 @@
     "path": "./android.keystore",
     "alias": "finsmart"
   },
-  "appVersionCode": 1,
+  "appVersionCode": 100,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://finsmart-ai.pages.dev/manifest.json",

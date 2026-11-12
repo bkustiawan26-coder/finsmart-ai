@@ -21,7 +21,7 @@ plugins {
 }
 
 def twaManifest = [
-    applicationId: 'id.finsmart.ai',
+    applicationId: 'fun.app_26app.twa',
     hostName: 'finsmart-ai.pages.dev', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
     name: 'FinSmart AI', // The application name.
@@ -52,13 +52,13 @@ def twaManifest = [
 
 android {
     compileSdkVersion 36
-    namespace "id.finsmart.ai"
+    namespace "fun.app_26app.twa"
     defaultConfig {
-        applicationId "id.finsmart.ai"
+        applicationId "fun.app_26app.twa"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 100
+        versionName "2.0.0"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name

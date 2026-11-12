@@ -3,8 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "id.finsmart.ai",
+      "package_name": "fun.app_26app.twa",
       "sha256_cert_fingerprints": [
+        "3A:62:DB:88:B4:4E:77:8E:EC:FD:7A:7A:7A:47:01:C6:37:69:CB:9F:98:E2:7C:75:0D:DF:7B:7F:1B:76:00:45",
         "0E:E4:FF:CB:41:2C:08:FC:1C:63:85:E0:2D:72:16:EE:4E:60:8E:84:B7:36:01:83:9E:E6:0E:FC:C3:6E:6E:6C"
       ]
     }
