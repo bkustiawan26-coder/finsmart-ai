@@ -1,0 +1,42 @@
+{
+  "packageId": "id.finsmart.ai",
+  "host": "finsmart-ai.pages.dev",
+  "name": "FinSmart AI",
+  "launcherName": "FinSmart AI",
+  "display": "standalone",
+  "themeColor": "#2563EB",
+  "themeColorDark": "#0F172A",
+  "navigationColor": "#0F172A",
+  "navigationColorDark": "#0F172A",
+  "navigationDividerColor": "#0F172A",
+  "navigationDividerColorDark": "#0F172A",
+  "backgroundColor": "#0F172A",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://finsmart-ai.pages.dev/icons/icon-512.png",
+  "maskableIconUrl": "https://finsmart-ai.pages.dev/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "finsmart"
+  },
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://finsmart-ai.pages.dev/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://finsmart-ai.pages.dev/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": []
+}

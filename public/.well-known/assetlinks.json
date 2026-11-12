@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "id.finsmart.ai",
+      "sha256_cert_fingerprints": [
+        "0E:E4:FF:CB:41:2C:08:FC:1C:63:85:E0:2D:72:16:EE:4E:60:8E:84:B7:36:01:83:9E:E6:0E:FC:C3:6E:6E:6C"
+      ]
+    }
+  }
+]
