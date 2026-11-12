@@ -1,10 +1,10 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { getGenerativeModel, Schema, GenerationConfig } from 'firebase/ai';
+import { ai } from '../firebase';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const MODELS = ['gemini-3.5-flash-lite', 'gemini-3.6-flash'];
 
-// Simple cache to avoid redundant API calls
-const cache: Record<string, { data: any, timestamp: number }> = {};
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+const cache: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_TTL = 1000 * 60 * 5;
 
 const getCachedData = (key: string) => {
   const cached = cache[key];
@@ -18,18 +18,39 @@ const setCachedData = (key: string, data: any) => {
   cache[key] = { data, timestamp: Date.now() };
 };
 
-// Helper for exponential backoff retry
-const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 1000) => {
-  try {
-    return await fn();
-  } catch (error: any) {
-    if (retries > 0 && (error.message?.includes('429') || error.message?.toLowerCase().includes('rate limit'))) {
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchWithRetry(fn, retries - 1, delay * 2);
-    }
-    throw error;
-  }
+const isRateLimit = (error: any) => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('429') || msg.includes('rate limit') || msg.includes('quota') || msg.includes('resource_exhausted');
 };
+
+const isModelUnavailable = (error: any) => {
+  const msg = String(error?.message || '').toLowerCase();
+  return msg.includes('404') || msg.includes('not found') || msg.includes('not supported');
+};
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function generate(prompt: string, systemInstruction: string, generationConfig: GenerationConfig): Promise<string> {
+  let lastError: any;
+  for (const modelName of MODELS) {
+    const model = getGenerativeModel(ai, { model: modelName, systemInstruction, generationConfig });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      } catch (error: any) {
+        lastError = error;
+        if (isRateLimit(error) && attempt < 2) {
+          await sleep(1000 * Math.pow(2, attempt));
+          continue;
+        }
+        break;
+      }
+    }
+    if (!isModelUnavailable(lastError)) break;
+  }
+  throw lastError;
+}
 
 export const aiAdvisorService = {
   async getFinancialAdvice(prompt: string, context?: any) {
@@ -37,73 +58,62 @@ export const aiAdvisorService = {
     const cached = getCachedData(cacheKey);
     if (cached) return cached;
 
+    const summary = context ? {
+      profile: {
+        name: context.profile?.displayName,
+        healthScore: context.profile?.financialHealthScore,
+        healthStatus: context.profile?.healthBreakdown?.status
+      },
+      recentTransactions: context.transactions?.slice(0, 10).map((t: any) => ({
+        type: t.type,
+        amount: t.amount,
+        category: t.category,
+        date: t.date
+      })),
+      budgets: context.budgets?.map((b: any) => ({
+        category: b.category,
+        limit: b.limit,
+        spent: b.spent
+      })),
+      goals: context.goals?.map((g: any) => ({
+        title: g.title,
+        target: g.targetAmount,
+        current: g.currentAmount
+      }))
+    } : {};
+
+    const systemInstruction = `
+      You are FinSmart AI, a premium financial advisor.
+      Your goal is to provide professional, actionable, and empathetic financial advice based on the user's data.
+      Use Indonesian as the primary language, but maintain a modern fintech vibe.
+      Keep responses concise, well-structured, and use markdown (like bullet points or bold text) where appropriate.
+
+      Here is the user's current financial context:
+      ${JSON.stringify(summary, null, 2)}
+
+      Guidelines:
+      - If the user asks about their spending, analyze the 'recentTransactions' and 'budgets'.
+      - If the user asks about goals, reference the 'goals' data.
+      - If the user asks for general advice, consider their 'healthScore' and 'healthStatus'.
+      - Always be encouraging and provide specific, actionable steps.
+      - Do not expose raw JSON or technical details to the user.
+    `;
+
     try {
-      const model = "gemini-3-flash-preview";
-      
-      // Extract relevant data from context to avoid sending too much raw data
-      const summary = context ? {
-        profile: {
-          name: context.profile?.displayName,
-          healthScore: context.profile?.financialHealthScore,
-          healthStatus: context.profile?.healthBreakdown?.status
-        },
-        recentTransactions: context.transactions?.slice(0, 10).map((t: any) => ({
-          type: t.type,
-          amount: t.amount,
-          category: t.category,
-          date: t.date
-        })),
-        budgets: context.budgets?.map((b: any) => ({
-          category: b.category,
-          limit: b.limit,
-          spent: b.spent
-        })),
-        goals: context.goals?.map((g: any) => ({
-          title: g.title,
-          target: g.targetAmount,
-          current: g.currentAmount
-        }))
-      } : {};
-
-      const systemInstruction = `
-        You are FinSmart AI, a premium financial advisor. 
-        Your goal is to provide professional, actionable, and empathetic financial advice based on the user's data.
-        Use Indonesian as the primary language, but maintain a modern fintech vibe.
-        Keep responses concise, well-structured, and use markdown (like bullet points or bold text) where appropriate.
-        
-        Here is the user's current financial context:
-        ${JSON.stringify(summary, null, 2)}
-        
-        Guidelines:
-        - If the user asks about their spending, analyze the 'recentTransactions' and 'budgets'.
-        - If the user asks about goals, reference the 'goals' data.
-        - If the user asks for general advice, consider their 'healthScore' and 'healthStatus'.
-        - Always be encouraging and provide specific, actionable steps.
-        - Do not expose raw JSON or technical details to the user.
-      `;
-
-      const result = await fetchWithRetry(() => ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-          topP: 0.95,
-        },
-      }));
-
-      const text = result.text;
+      const text = await generate(prompt, systemInstruction, { temperature: 0.7, topP: 0.95 });
       setCachedData(cacheKey, text);
       return text;
     } catch (error) {
-      console.error("AI Advisor Error:", error);
-      return "Maaf, saya sedang mengalami kendala teknis (Rate Limit). Silakan coba lagi dalam beberapa saat.";
+      console.error('AI Advisor Error:', error);
+      if (isRateLimit(error)) {
+        return 'Maaf, kuota AI gratis untuk saat ini sudah habis. Silakan coba lagi beberapa saat lagi.';
+      }
+      return 'Maaf, saya sedang mengalami kendala teknis. Silakan coba lagi dalam beberapa saat.';
     }
   },
 
   async suggestBudgets(transactions: any[], currentBudgets: any[]) {
-    // Summarize transactions by category to reduce token usage
-    const categorySummary: Record<string, { total: number, count: number }> = {};
+    const categorySummary: Record<string, { total: number; count: number }> = {};
     let totalIncome = 0;
     let incomeCount = 0;
 
@@ -137,62 +147,45 @@ export const aiAdvisorService = {
     const cached = getCachedData(cacheKey);
     if (cached) return cached;
 
-    try {
-      const model = "gemini-3-flash-preview";
-      
-      const systemInstruction = `
-        You are FinSmart AI, a premium financial advisor.
-        Analyze the user's spending summary and current budgets to suggest dynamic budget adjustments.
-        Your goal is to recommend category limits that are realistic based on their spending patterns, yet encourage saving.
-        Consider income fluctuations and average spending per category.
-        Provide the response in JSON format.
-      `;
+    const systemInstruction = `
+      You are FinSmart AI, a premium financial advisor.
+      Analyze the user's spending summary and current budgets to suggest dynamic budget adjustments.
+      Your goal is to recommend category limits that are realistic based on their spending patterns, yet encourage saving.
+      Consider income fluctuations and average spending per category.
+      Provide the response in JSON format.
+    `;
 
-      const result = await fetchWithRetry(() => ai.models.generateContent({
-        model,
-        contents: `Based on my spending summary and current budgets, suggest new budget limits for my categories. Here is the data: ${JSON.stringify(summary)}`,
-        config: {
-          systemInstruction,
-          temperature: 0.2,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
+    const responseSchema = Schema.object({
+      properties: {
+        suggestions: Schema.array({
+          items: Schema.object({
             properties: {
-              suggestions: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    category: {
-                      type: Type.STRING,
-                      description: "The name of the category (e.g., Makanan, Transportasi, Tagihan, Hiburan, Belanja, Kesehatan, Lainnya)"
-                    },
-                    suggestedLimit: {
-                      type: Type.NUMBER,
-                      description: "The suggested budget limit for this category"
-                    },
-                    reasoning: {
-                      type: Type.STRING,
-                      description: "A short, encouraging explanation in Indonesian of why this limit is suggested based on their spending patterns."
-                    }
-                  },
-                  required: ["category", "suggestedLimit", "reasoning"]
-                }
-              }
-            },
-            required: ["suggestions"]
-          }
-        },
-      }));
-
-      if (result.text) {
-        const suggestions = JSON.parse(result.text).suggestions;
-        setCachedData(cacheKey, suggestions);
-        return suggestions;
+              category: Schema.string({
+                description: 'The name of the category (e.g., Makanan, Transportasi, Tagihan, Hiburan, Belanja, Kesehatan, Lainnya)'
+              }),
+              suggestedLimit: Schema.number({
+                description: 'The suggested budget limit for this category'
+              }),
+              reasoning: Schema.string({
+                description: 'A short, encouraging explanation in Indonesian of why this limit is suggested based on their spending patterns.'
+              })
+            }
+          })
+        })
       }
-      return [];
+    });
+
+    try {
+      const text = await generate(
+        `Based on my spending summary and current budgets, suggest new budget limits for my categories. Here is the data: ${JSON.stringify(summary)}`,
+        systemInstruction,
+        { temperature: 0.2, responseMimeType: 'application/json', responseSchema }
+      );
+      const suggestions = JSON.parse(text).suggestions || [];
+      setCachedData(cacheKey, suggestions);
+      return suggestions;
     } catch (error) {
-      console.error("AI Budget Suggestion Error:", error);
+      console.error('AI Budget Suggestion Error:', error);
       return [];
     }
   }

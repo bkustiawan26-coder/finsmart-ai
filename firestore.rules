@@ -79,6 +79,7 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
       allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
 
       match /transactions/{transactionId} {
         allow read: if isOwner(userId);
@@ -104,6 +105,7 @@ service cloud.firestore {
       match /changelogs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId) && isValidChangelog(request.resource.data);
+        allow delete: if isOwner(userId);
       }
     }
   }
