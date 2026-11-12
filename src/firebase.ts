@@ -7,7 +7,7 @@ import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
+const recaptchaSiteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined) || '6LcSGhwuAAAAAJsRFFDp32eMFrrWtH4t62hiK6o5';
 if (recaptchaSiteKey) {
   initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider(recaptchaSiteKey),
