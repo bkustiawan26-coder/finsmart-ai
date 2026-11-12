@@ -6,6 +6,9 @@ on:
     paths: ["android/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,3 +29,17 @@ jobs:
           path: |
             android/app/build/outputs/bundle/release/*.aab
             android/app/build/outputs/apk/release/*.apk
+      - name: Publish unsigned build to android-build branch
+        run: |
+          mkdir -p /tmp/out
+          cp android/app/build/outputs/bundle/release/*.aab /tmp/out/
+          cp android/app/build/outputs/apk/release/*.apk /tmp/out/
+          cd /tmp/out
+          git init -q -b android-build
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Unsigned build ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" android-build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
